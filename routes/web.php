@@ -10,6 +10,9 @@ use App\Http\Controllers\WalletController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TarikTunaiController;
 use App\Http\Controllers\SettingController;
+use App\Http\Controllers\KarirController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ResetPasswordController;
 
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\AdminInvestmentController;
@@ -18,6 +21,8 @@ use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AnnouncementController;
 use App\Http\Controllers\Admin\AdminWithdrawController;
 use App\Http\Controllers\Admin\AdminProfileController;
+use App\Http\Controllers\Admin\InvestmentPackagesController;
+use App\Http\Controllers\Admin\AdminReferralController;
 
 use App\Models\Announcement;
 use App\Models\Referral;
@@ -39,6 +44,12 @@ Route::middleware('guest')->group(function () {
 
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
     Route::post('/register', [AuthController::class, 'register']);
+
+    Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
+    Route::post('/forgot-password', [AuthController::class, 'sendResetLinkEmail'])->name('password.email');
+
+    Route::get('/reset-password', [ResetPasswordController::class, 'show'])->name('password.reset');
+    Route::post('/reset-password', [ResetPasswordController::class, 'submit'])->name('password.update');
 });
 
 // Logout
@@ -71,7 +82,8 @@ Route::middleware('auth')->group(function () {
                 'image_url' => $a->image_url,
             ]);
 
-        if ($user->is_admin) {
+        // 🔥 Pisahkan admin vs investor
+        if ($user->is_admin || $user->role === 'admin') {
             return Inertia::render('Admin/Dashboard', [
                 'auth'          => ['user' => $user],
                 'stats'         => [
@@ -102,6 +114,7 @@ Route::middleware('auth')->group(function () {
             ],
             'logoutUrl'      => route('logout'),
             'profileUrl'     => route('profile'),
+            'karirUrl'       => route('karir'),
         ]);
     })->name('dashboard');
 
@@ -120,12 +133,56 @@ Route::middleware('auth')->group(function () {
     });
 
     // ========================
+    // Karir Route (Investor)
+    // ========================
+    Route::get('/karir', [KarirController::class, 'index'])->name('karir');
+
+    // ========================
+    // Profile (Investor)
+    // ========================
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
+    Route::post('/profile/notifications', [ProfileController::class, 'updateNotifications'])->name('profile.notifications');
+    Route::post('/profile/preferences', [ProfileController::class, 'updatePreferences'])->name('profile.preferences');
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
+
+    // ========================
+    // Tarik Tunai
+    // ========================
+    Route::get('/tarik-tunai', [TarikTunaiController::class, 'index'])->name('tarik.index');
+    Route::post('/tarik-tunai', [TarikTunaiController::class, 'store'])->name('tarik.store');
+
+    // ========================
+    // Deposit Routes (Investor)
+    // ========================
+    Route::get('/deposit', [DepositController::class, 'index'])->name('deposit.index');
+    Route::post('/deposit', [DepositController::class, 'store'])->name('deposit.store');
+    Route::get('/investor/wallet-balance', [DashboardController::class, 'getWalletBalance']);
+
+    // ========================
+    // Dompet (Wallet)
+    // ========================
+    Route::get('/dompet', [WalletController::class, 'index'])->name('dompet');
+
+    // Endpoint API untuk validasi kode konsultan/referral
+    Route::get('/check-referral/{code}', function($code) {
+        $exists = \App\Models\User::where('referral_code', $code)->exists();
+        return response()->json(['valid' => $exists]);
+    });
+
+    // ========================
     // Admin Routes
     // ========================
     Route::middleware(['isAdmin'])->prefix('admin')->group(function () {
 
+        // ========================
         // Admin Profile
+        // ========================
         Route::get('/profile', [AdminProfileController::class, 'index'])->name('admin.profile');
+        Route::get('/profile/edit', [AdminProfileController::class, 'edit'])->name('admin.profile.edit');
+        Route::post('/profile/update', [AdminProfileController::class, 'update'])->name('admin.profile.update');
+        Route::get('/profile/security', [AdminProfileController::class, 'security'])->name('admin.profile.security');
+        Route::post('/profile/update-password', [AdminProfileController::class, 'updatePassword'])->name('admin.profile.update-password');
         Route::post('/profile/notifications', [AdminProfileController::class, 'updateNotifications'])->name('admin.profile.notifications');
         Route::post('/profile/preferences', [AdminProfileController::class, 'updatePreferences'])->name('admin.profile.preferences');
 
@@ -145,10 +202,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/users/{id}/generate-wallet', [AdminUserController::class, 'generateWallet'])->name('admin.users.generateWallet');
 
         // Admin Settings
-        Route::prefix('settings')->group(function () {
-            Route::get('/', [AdminSettingController::class, 'index'])->name('admin.settings');
-            Route::post('/update', [AdminSettingController::class, 'update'])->name('admin.settings.update');
-        });
+        Route::get('/settings', [AdminSettingController::class, 'index'])->name('admin.settings');
+        Route::post('/settings/update', [AdminSettingController::class, 'update'])->name('admin.settings.update');
 
         // Admin Withdraws
         Route::get('/withdraws', [AdminWithdrawController::class, 'index'])->name('withdraws.index');
@@ -160,36 +215,17 @@ Route::middleware('auth')->group(function () {
         Route::post('/announcements', [AnnouncementController::class, 'store'])->name('admin.announcements.store');
         Route::delete('/announcements/{id}', [AnnouncementController::class, 'destroy'])->name('admin.announcements.destroy');
         Route::post('/announcements/{id}/toggle', [AnnouncementController::class, 'toggle'])->name('admin.announcements.toggle');
+        
+        // Admin Investment Packages
+        Route::get('/deposit-packages', [InvestmentPackagesController::class, 'index'])->name('admin.deposit-packages.index');
+        Route::post('/deposit-packages', [InvestmentPackagesController::class, 'store'])->name('admin.deposit-packages.store');
+        Route::post('/deposit-packages/{id}', [InvestmentPackagesController::class, 'update'])
+            ->name('admin.deposit-packages.update');
+        Route::post('/deposit-packages/{id}/delete', [InvestmentPackagesController::class, 'destroy'])
+            ->name('admin.deposit-packages.destroy');
+
+        // Admin Referrals
+        Route::get('/referrals', [AdminReferralController::class, 'index'])
+            ->name('admin.referrals.index');
     });
-
-    // ========================
-    // Profile (Investor)
-    // ========================
-    Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
-    Route::post('/profile/notifications', [ProfileController::class, 'updateNotifications'])->name('profile.notifications');
-    Route::post('/profile/preferences', [ProfileController::class, 'updatePreferences'])->name('profile.preferences');
-
-    // ========================
-    // Tarik Tunai
-    // ========================
-    Route::get('/tarik-tunai', [TarikTunaiController::class, 'index'])->name('tarik.index');
-    Route::post('/tarik-tunai', [TarikTunaiController::class, 'store'])->name('tarik.store');
-
-    // ========================
-    // Deposit Routes (Investor)
-    // ========================
-    Route::get('/deposit', [DepositController::class, 'index'])->name('deposit.index');
-    Route::post('/deposit', [DepositController::class, 'store'])->name('deposit.store');
-    Route::get('/investor/wallet-balance', [\App\Http\Controllers\DashboardController::class, 'getWalletBalance']);
-    // ========================
-    // Dompet (Wallet)
-    // ========================
-    Route::get('/dompet', [WalletController::class, 'index'])->name('dompet');
-
-// Endpoint API untuk validasi kode konsultan/referral
-Route::get('/check-referral/{code}', function($code) {
-    $exists = \App\Models\User::where('referral_code', $code)->exists();
-    return response()->json(['valid' => $exists]);
-});
-
 });

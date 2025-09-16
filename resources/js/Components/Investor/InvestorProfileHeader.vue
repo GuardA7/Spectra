@@ -2,10 +2,6 @@
   <nav class="bg-white shadow-md p-4 flex justify-between items-center sticky top-0 z-50 h-16 border-b border-gray-200">
     <!-- Logo -->
     <div class="flex items-center">
-      <!-- Toggle sidebar button -->
-      <button @click="$emit('toggle-sidebar')" class="md:hidden mr-3 text-gray-500">
-        <i class="fas fa-bars text-xl"></i>
-      </button>
       <div class="flex items-center">
         <img src="@/assets/logo.png" alt="Spectra Logo" class="w-8 h-8 mr-2" />
         <span class="text-lg font-bold text-gray-800">
@@ -18,13 +14,15 @@
     <div class="relative flex items-center space-x-4">
       <div class="hidden md:flex flex-col text-right">
         <span class="text-xs text-gray-500">Selamat datang,</span>
-        <button @click="toggleDropdown" class="font-semibold text-gray-800 focus:outline-none flex items-center text-sm">
+        <span class="font-semibold text-gray-800 text-sm">
           {{ user.name }}
-          <i class="fas fa-caret-down ml-1 text-gray-400"></i>
-        </button>
+        </span>
       </div>
 
-      <button @click="toggleDropdown" class="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-green-500 flex items-center justify-center text-white font-bold shadow-md">
+      <button 
+        @click="toggleDropdown" 
+        class="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-green-500 flex items-center justify-center text-white font-bold shadow-md"
+      >
         {{ userInitials }}
       </button>
 
@@ -37,17 +35,20 @@
         leave-from-class="transform scale-100 opacity-100"
         leave-to-class="transform scale-95 opacity-0"
       >
-        <div v-if="dropdownOpen" class="absolute right-0 mt-12 w-48 bg-white shadow-lg rounded-lg overflow-hidden z-50 border border-gray-200">
+        <div 
+          v-if="dropdownOpen" 
+          class="absolute right-0 mt-12 w-48 bg-white shadow-lg rounded-lg overflow-hidden z-50 border border-gray-200"
+        >
           <div class="px-4 py-2 border-b border-gray-100">
             <p class="text-sm font-medium text-gray-800">{{ user.name }}</p>
             <p class="text-xs text-gray-500">{{ user.email }}</p>
           </div>
-          <!-- Profile Link Investor -->
-          <a :href="profileUrl" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-            <i class="fas fa-user-circle mr-2"></i> Profil
-          </a>
+
           <!-- Logout -->
-          <button @click="logout" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+          <button 
+            @click="logout" 
+            class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+          >
             <i class="fas fa-sign-out-alt mr-2"></i> Keluar
           </button>
         </div>
@@ -62,11 +63,9 @@ import { router } from '@inertiajs/vue3'
 
 const props = defineProps({
   user: { type: Object, default: () => ({ name: 'Investor', email: 'investor@example.com' }) },
-  profileUrl: { type: String, default: '/profile' },
   logoutUrl: { type: String, default: '/logout' }
 })
 
-const emit = defineEmits(['toggle-sidebar'])
 const dropdownOpen = ref(false)
 
 const userInitials = computed(() => {

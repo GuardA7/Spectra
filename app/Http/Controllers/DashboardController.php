@@ -51,6 +51,17 @@ class DashboardController extends Controller
                     ->pluck('value','key_name')
                     ->toArray();
 
+        $settings = Setting::whereIn('key_name', [
+                'url_chatbot',
+                'url_tutorial',
+                'url_academy',
+                'bonus_target_omset',
+                'bonus_profit_extra',
+                'currency',
+            ])
+            ->pluck('value', 'key_name')
+            ->toArray();
+
         return Inertia::render('Investor/DashboardInvestor', [
             'auth'           => ['user' => $user],
             'walletBalance'  => $walletBalance,
@@ -62,6 +73,11 @@ class DashboardController extends Controller
                 'tutorial' => $settings['url_tutorial'] ?? '',
                 'chatbot'  => $settings['url_chatbot'] ?? '',
             ],
+            'bonus' => [
+                'target_omset'  => (float)($settings['bonus_target_omset'] ?? 0),
+                'profit_extra'  => (float)($settings['bonus_profit_extra'] ?? 0),
+            ],
+            'currency' => $settings['currency'] ?? 'USD',
             'logoutUrl'      => route('logout'),
             'profileUrl'     => route('profile'),
         ]);

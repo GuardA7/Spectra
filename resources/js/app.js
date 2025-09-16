@@ -7,6 +7,7 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { InertiaProgress } from '@inertiajs/progress';
 import { Link } from '@inertiajs/vue3';
 import { createI18n } from 'vue-i18n';
+import { ZiggyVue } from 'ziggy-js';
 
 // ========================
 // Pesan i18n (diperluas)
@@ -93,19 +94,17 @@ const i18n = createI18n({
 });
 
 // ========================
-// Buat Inertia app
+// Buat Inertia App
 // ========================
 createInertiaApp({
   resolve: name =>
-resolvePageComponent(
-  `./Pages/${name}.vue`,
-  import.meta.glob('./Pages/**/*.vue')
-).then(module => module.default),
+    resolvePageComponent(`./Pages/${name}.vue`, import.meta.glob('./Pages/**/*.vue')),
   setup({ el, App, props, plugin }) {
     const app = createApp({ render: () => h(App, props) });
 
     app.use(plugin);
     app.use(i18n);
+    app.use(ZiggyVue, window.Ziggy);
     app.component('Link', Link);
 
     // override locale dari props Inertia jika ada

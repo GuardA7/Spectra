@@ -13,7 +13,7 @@ class ProfileController extends Controller
         $user = Auth::user();
 
         // siapkan data softcode
-        return Inertia::render('Profile', [
+        return Inertia::render('Investor/Profile', [
             'auth' => [
                 'user' => $user,
             ],
@@ -31,6 +31,37 @@ class ProfileController extends Controller
                 'language' => 'id',
             ],
         ]);
+    }
+
+    public function edit()
+    {
+        $user = Auth::user();
+
+        return Inertia::render('Investor/EditProfile', [
+            'auth' => [
+                'user' => $user,
+            ],
+        ]);
+    }
+
+    public function update(Request $request)
+    {
+        $user = Auth::user();
+
+        $request->validate([
+            'name'  => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email,'.$user->id,
+            'phone' => 'nullable|string|max:20',
+        ]);
+
+        $user->update([
+            'name'  => $request->name,
+            'email' => $request->email,
+            'phone' => $request->phone,
+        ]);
+
+        return redirect()->route('profile')
+            ->with('success', 'Profil berhasil diperbarui.');
     }
 
     public function updateNotifications(Request $request)

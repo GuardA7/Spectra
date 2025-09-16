@@ -82,13 +82,6 @@ const userPref = pageProps.userPref || {}
 const profileUrl = pageProps?.profileUrl || '/profile'
 const logoutUrl = pageProps?.logoutUrl || '/logout'
 
-// Sidebar menu
-const sidebarMenu = [
-  { label: "Dashboard", url: "/dashboard", icon: "fas fa-home" },
-  { label: "Deposit", url: "/deposit", icon: "fas fa-plus" },
-  { label: "Dompet", url: "/dompet", icon: "fas fa-wallet" },
-  { label: "Pengaturan", url: "/settings", icon: "fas fa-cog", active: true },
-]
 
 // Reactive form
 const form = reactive({

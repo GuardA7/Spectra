@@ -5,21 +5,13 @@
       <!-- Kiri - Ilustrasi -->
       <div class="md:w-2/5 bg-gradient-to-br from-green-600 to-indigo-700 text-white p-8 flex flex-col justify-center items-center">
         <h1 class="text-3xl font-bold mb-2 text-center">Selamat Datang di Spectra</h1>
-        <p class="text-sm opacity-90 mb-6 text-center">Masuk untuk mengakses dashboard Anda</p>
 
         <img :src="logo" alt="Logo Spectra" class="h-24 w-24 mb-6 object-contain rounded-full shadow-lg" />
-
-        <p class="text-sm text-center opacity-90">
-          Belum punya akun?
-          <Link href="/register" class="underline font-semibold hover:opacity-80 transition-opacity">Daftar sekarang</Link>
-        </p>
       </div>
 
       <!-- Kanan - Form Login -->
       <div class="md:w-3/5 p-8 md:p-10">
         <h2 class="text-2xl md:text-3xl font-bold mb-2 text-gray-800 text-center">Masuk ke Akun</h2>
-        <p class="text-gray-600 text-sm md:text-base mb-6 text-center">Masukkan kredensial Anda untuk melanjutkan</p>
-
         <form @submit.prevent="submit" class="space-y-6">
           <!-- Email -->
           <div>
@@ -58,6 +50,19 @@
             </button>
             <p v-if="errors.password" class="text-red-500 text-xs mt-1">{{ errors.password }}</p>
           </div>
+
+        <p class="text-sm text-center opacity-90">
+          Belum punya akun?
+          <Link href="/register" class="underline font-semibold hover:opacity-80 transition-opacity">Daftar sekarang</Link>
+        </p>
+
+          <!-- Lupa Password Link -->
+            <div class="flex justify-end">
+                <Link href="/forgot-password" class="text-blue-600 hover:underline">
+                <i class="fas fa-key mr-1 text-xs"></i>
+                Lupa kata sandi?
+              </Link>
+            </div>
 
           <!-- Tombol Login -->
           <button type="submit"

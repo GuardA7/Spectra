@@ -1,6 +1,8 @@
 <template>
-  <div class="min-h-screen bg-gray-50 p-6">
+  <InvestorProfileHeader :user="user" :logoutUrl="logoutUrl" />
+  <div class="min-h-screen bg-gray-50 p-6 pb-16">
     <!-- Header -->
+
     <div class="max-w-4xl mx-auto mb-6 flex items-center justify-between">
       <div>
         <h1 class="text-2xl font-bold text-gray-800 mb-1">Profil Pengguna</h1>
@@ -85,7 +87,7 @@
 
           <div class="mt-8 pt-4 border-t border-gray-100 flex flex-col sm:flex-row gap-4">
             <button
-              @click="$inertia.visit('/profile/edit')"
+              @click="showEditModal = true"
               class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700 transition-colors flex items-center justify-center"
             >
               <i class="fas fa-edit mr-2"></i> Edit Profil
@@ -220,16 +222,42 @@
 
       </div>
     </div>
+    <FooterBarInvestor />
+    <!-- Modal Edit Profil -->
+    <div v-if="showEditModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-lg w-full max-w-md p-6 relative">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">Edit Profil</h2>
+        <form @submit.prevent="submit" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Nama Lengkap</label>
+            <input type="text" v-model="form.name" class="w-full border rounded-md p-2" required />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Email</label>
+            <input type="email" v-model="form.email" class="w-full border rounded-md p-2" required />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Nomor Handphone</label>
+            <input type="text" v-model="form.phone" class="w-full border rounded-md p-2" />
+          </div>
+          <div class="flex justify-end gap-2 mt-4">
+            <button type="button" @click="showEditModal = false" class="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-100">Batal</button>
+            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Simpan</button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
-import { usePage } from '@inertiajs/vue3'
+import InvestorProfileHeader from '@/Components/Investor/InvestorProfileHeader.vue'
+import FooterBarInvestor from '@/Components/Investor/FooterBarInvestor.vue'
+import { usePage, useForm } from '@inertiajs/vue3'
+import { route } from 'ziggy-js'
 
 const { props } = usePage()
-
-// User & Data
 const user = props.auth.user
 const billing = props.billing || []
 const referral = props.referral || { qr: '', code: user.referral_code }
@@ -246,6 +274,19 @@ const menuItems = [
   { name: 'billing', label: 'Tagihan', icon: 'fas fa-credit-card' },
   { name: 'referral', label: 'Referral', icon: 'fas fa-users' }
 ]
+
+// Modal Edit Profil
+const showEditModal = ref(false)
+const form = useForm({
+  name: user.name || '',
+  email: user.email || '',
+  phone: user.phone || ''
+})
+const submit = () => {
+    form.post(route('profile.update'), {
+        onSuccess: () => (showEditModal.value = false)
+    })
+}
 
 // User initial
 const userInitial = computed(() => user?.name?.charAt(0).toUpperCase() || '')

@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -64,7 +65,6 @@ class AuthController extends Controller
         // Validasi input
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'username' => ['required', 'string', 'max:255', 'unique:users,username'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'wa' => ['required', 'string', 'max:20'], // ini akan disimpan di 'phone'
             'konsultan_kode' => ['nullable', 'string', 'max:50'],
@@ -92,7 +92,6 @@ class AuthController extends Controller
             // Simpan user baru
             $user = User::create([
                 'name' => $validated['name'],
-                'username' => $validated['username'],
                 'email' => $validated['email'],
                 'phone' => $validated['wa'], // disimpan di kolom phone
                 'password' => bcrypt($validated['password']),
@@ -103,13 +102,11 @@ class AuthController extends Controller
                 'is_active' => 1,
             ]);
 
-            // Login otomatis
-            Auth::login($user);
 
             return response()->json([
                 'success' => true,
                 'referral_code' => $user->referral_code,
-                'dashboard' => route('dashboard'),
+                'login' => route('login'),
             ]);
         } catch (\Exception $e) {
             // Tangani error server, kirim ke frontend
@@ -118,10 +115,25 @@ class AuthController extends Controller
             ], 500);
         }
     }
+    public function showForgotPassword()
+    {
+        return inertia('Auth/ForgotPassword');
+    }
 
-    /**
-     * Logout
-     */
+
+    public function sendResetLinkEmail(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|exists:users,email',
+        ]);
+
+        $status = Password::sendResetLink($request->only('email'));
+
+        return $status === Password::RESET_LINK_SENT
+            ? back()->with(['status' => __($status)])
+            : back()->withErrors(['email' => __($status)]);
+    }
+
     public function logout(Request $request)
     {
         Auth::logout();

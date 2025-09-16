@@ -7,6 +7,10 @@
       <title inertia>{{ config('app.name', 'Laravel') }}</title>
 
       @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+      {{-- Ziggy --}}
+      @routes
+
       @inertiaHead
   </head>
   <body class="font-sans antialiased">
